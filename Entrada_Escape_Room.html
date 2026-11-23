@@ -695,6 +695,35 @@
             
             particlesContainer.appendChild(particle);
         }
+
+        let screenWakeLock = null;
+        let wakeLockRequestPending = false;
+
+        async function keepScreenAwake() {
+            if (!('wakeLock' in navigator) || document.visibilityState !== 'visible' || screenWakeLock || wakeLockRequestPending) {
+                return;
+            }
+
+            wakeLockRequestPending = true;
+            try {
+                screenWakeLock = await navigator.wakeLock.request('screen');
+                screenWakeLock.addEventListener('release', () => {
+                    screenWakeLock = null;
+                });
+            } catch (error) {
+                screenWakeLock = null;
+            } finally {
+                wakeLockRequestPending = false;
+            }
+        }
+
+        document.addEventListener('pointerdown', keepScreenAwake);
+        document.addEventListener('click', keepScreenAwake);
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                keepScreenAwake();
+            }
+        });
     </script>
 </body>
 </html>
