@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emergência | Sistema em risco</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap');
+
+        :root {
+            color-scheme: dark;
+            --background: #101113;
+            --text: #f5f2ea;
+            --muted: #b7b7b0;
+            --red: #ff473b;
+            --yellow: #f8cb59;
+            --green: #81d8aa;
+        }
+
+        * { box-sizing: border-box; }
+        [hidden] { display: none !important; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            background: repeating-linear-gradient(0deg, transparent 0 3px, rgba(255,255,255,.018) 4px), var(--background);
+        }
+
+        button, input { font: inherit; }
+        button { cursor: pointer; }
+        button:focus-visible, input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 4px; }
+
+        .screen {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topbar {
+            min-height: 68px;
+            padding: 18px clamp(20px, 5%, 68px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            border-bottom: 1px solid #393a38;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .75rem;
+            text-transform: uppercase;
+        }
+
+        .brand { color: #e4e3db; }
+        .status { color: var(--yellow); text-align: right; }
+        .status::before { content: '●'; margin-right: 8px; }
+
+        .start-main {
+            flex: 1;
+            display: grid;
+            place-content: center;
+            justify-items: center;
+            padding: 50px 20px;
+            text-align: center;
+            background: radial-gradient(ellipse at center, #34211d 0%, transparent 62%);
+        }
+
+        .start-mark {
+            width: 92px;
+            height: 92px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 30px;
+            border: 1px solid #77625b;
+            border-radius: 50%;
+            color: var(--yellow);
+            font-size: 2.8rem;
+        }
+
+        .eyebrow {
+            margin: 0 0 12px;
+            color: var(--yellow);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .8rem;
+            text-transform: uppercase;
+        }
+
+        .start-main h1 { margin: 0 0 28px; font-size: clamp(2.2rem, 5vw, 4rem); line-height: 1; text-transform: uppercase; }
+        .start-code-form { width: min(420px, 100%); text-align: left; }
+        .start-code-form .primary { width: 100%; }
+        .primary {
+            min-height: 58px;
+            padding: 14px 28px;
+            border: 0;
+            border-radius: 3px;
+            background: var(--yellow);
+            color: #171611;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .primary:hover { background: #ffe08c; }
+
+        .bottom-bar {
+            min-height: 14px;
+            background: repeating-linear-gradient(135deg, var(--yellow) 0 18px, #1a1b1b 18px 36px);
+        }
+
+        .emergency {
+            border-top: 5px solid var(--red);
+            background: radial-gradient(ellipse at 18% 45%, rgba(161, 35, 29, .23), transparent 55%);
+        }
+        .emergency .status { color: var(--red); }
+        .emergency-main {
+            width: min(1120px, 100%);
+            margin: auto;
+            padding: 48px clamp(20px, 5%, 64px) 60px;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, .75fr);
+            gap: clamp(38px, 7%, 90px);
+            align-items: center;
+        }
+
+        .warning-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 0 20px;
+            color: var(--red);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: .85rem;
+            text-transform: uppercase;
+        }
+        .warning-label span {
+            display: inline-block;
+            color: var(--yellow);
+            font-size: 2.8rem;
+            line-height: 1;
+            text-shadow: 0 0 18px rgba(248, 203, 89, .65);
+            transform-origin: 50% 70%;
+            animation: warning-signal 1s ease-in-out infinite;
+        }
+        @keyframes warning-signal {
+            0%, 100% { opacity: 1; transform: rotate(0deg); }
+            20% { opacity: .35; transform: rotate(-15deg); }
+            40% { opacity: 1; transform: rotate(15deg); }
+            60% { opacity: .35; transform: rotate(-10deg); }
+            80% { opacity: 1; transform: rotate(10deg); }
+        }
+        .emergency h1 { margin: 0; font-size: clamp(2.4rem, 5vw, 4.8rem); line-height: .96; text-transform: uppercase; }
+        .emergency h1 strong { display: block; color: var(--red); }
+        .alert-copy { max-width: 580px; margin: 22px 0 0; color: #e5dfd9; font-size: 1.3rem; line-height: 1.35; }
+        .heat-display { margin: 30px 0 0; }
+        .heat-heading { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font: .75rem 'Share Tech Mono', monospace; text-transform: uppercase; }
+        .heat-heading strong { color: var(--red); }
+        .heat-meter { height: 14px; margin-top: 10px; padding: 2px; border: 1px solid #6d4740; background: #3a302e; }
+        .heat-meter::after { content: ''; display: block; width: 96%; height: 100%; background: repeating-linear-gradient(90deg, transparent 0 18px, #3a302e 18px 21px), linear-gradient(90deg, var(--yellow), var(--red)); box-shadow: 0 0 14px rgba(255, 71, 59, .5); animation: heat 1.8s ease-in-out infinite alternate; }
+        @keyframes heat { from { opacity: .7; } to { opacity: 1; } }
+
+        .challenge { border-top: 3px solid var(--yellow); padding-top: 22px; }
+        .challenge h2 { margin: 0 0 14px; font-size: 1.65rem; line-height: 1.1; text-transform: uppercase; }
+        .riddle { margin: 0 0 20px; color: #e0ddd5; font-size: 1.22rem; line-height: 1.4; }
+        .riddle strong { color: var(--yellow); }
+        label { display: block; margin-bottom: 8px; color: var(--muted); font-family: 'Share Tech Mono', monospace; font-size: .8rem; text-transform: uppercase; }
+        .code-row { display: flex; gap: 10px; }
+        input { width: 100%; min-width: 0; min-height: 58px; padding: 12px 15px; border: 1px solid #77716c; border-radius: 3px; background: #1c1c1c; color: white; font-family: 'Share Tech Mono', monospace; font-size: 1.15rem; }
+        input::placeholder { color: #9a9690; }
+        .code-row .primary { flex-shrink: 0; }
+        .feedback { min-height: 1.5em; margin: 10px 0 0; color: #ff928a; font-size: 1rem; font-weight: 700; }
+        .success { padding: 18px 0; border-top: 1px solid #496e5a; }
+        .success h2 { color: var(--green); }
+        .success p { margin: 0; color: #d7e8dc; font-size: 1.2rem; }
+        .success p + p { margin-top: 14px; }
+        .simulation { padding: 15px 20px; color: #aaa59e; font: .7rem 'Share Tech Mono', monospace; text-align: center; text-transform: uppercase; }
+
+        .emergency.resolved {
+            border-top-color: var(--green);
+            background: radial-gradient(ellipse at 18% 45%, rgba(52, 124, 84, .23), transparent 55%);
+        }
+        .resolved .status, .resolved .warning-label, .resolved h1 strong, .resolved .heat-heading strong { color: var(--green); }
+        .resolved .warning-label span { color: var(--green); text-shadow: 0 0 18px rgba(129, 216, 170, .5); animation: none; }
+        .resolved .heat-meter { border-color: #496e5a; background: #24352b; }
+        .resolved .heat-meter::after { width: 30%; background: var(--green); box-shadow: 0 0 14px rgba(129, 216, 170, .4); animation: none; }
+        .resolved .challenge { border-top-color: var(--green); }
+
+        @media (max-width: 700px) {
+            .emergency-main { grid-template-columns: 1fr; gap: 35px; padding-top: 38px; }
+            .emergency h1 { font-size: 2.2rem; }
+            .code-row { flex-direction: column; }
+            .code-row .primary { width: 100%; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .warning-label span, .heat-meter::after { animation: none; }
+        }
+    </style>
+</head>
+<body>
+    <section class="screen" id="startScreen">
+        <header class="topbar"><span class="brand">Sistema de monitoramento</span><span class="status">Aguardando acesso</span></header>
+        <main class="start-main">
+            <div class="start-mark" aria-hidden="true">⏻</div>
+            <p class="eyebrow">Terminal de acesso</p>
+            <h1>Sistema pronto</h1>
+            <form class="start-code-form" id="accessForm" novalidate>
+                <label for="accessCode">Código da pista anterior</label>
+                <input id="accessCode" type="text" autocomplete="off" placeholder="Digite o código" required>
+                <p class="feedback" id="accessFeedback" role="status" aria-live="polite"></p>
+                <button class="primary" type="submit">Acessar sistema</button>
+            </form>
+        </main>
+        <div class="bottom-bar" aria-hidden="true"></div>
+    </section>
+
+    <section class="screen emergency" id="emergencyScreen" hidden>
+        <header class="topbar"><span class="brand">Sistema de monitoramento</span><span class="status" id="systemStatus">Alerta crítico</span></header>
+        <main class="emergency-main">
+            <div>
+                <p class="warning-label"><span aria-hidden="true">⚠</span> Emergência térmica</p>
+                <h1>Computador <strong>superaquecido</strong></h1>
+                <p class="alert-copy">A temperatura está fora de controle. O computador pode pegar fogo a qualquer momento!</p>
+                <div class="heat-display" aria-label="Temperatura em nível crítico">
+                    <div class="heat-heading"><span>Temperatura do sistema</span><strong>Crítica</strong></div>
+                    <div class="heat-meter" aria-hidden="true"></div>
+                </div>
+            </div>
+            <div class="challenge">
+                <div id="challengeContent">
+                    <p class="eyebrow">Identifique o equipamento</p>
+                    <h2>Qual extintor você escolhe?</h2>
+                    <p class="riddle">Estou ligado à energia, mas não posso receber qualquer jato. <strong>Qual extintor é o mais recomendado para um princípio de incêndio em equipamento elétrico energizado?</strong></p>
+                    <form id="codeForm" novalidate>
+                        <label for="codeInput">Código da etiqueta do extintor</label>
+                        <div class="code-row">
+                            <input id="codeInput" type="text" autocomplete="off" placeholder="Digite o código" required>
+                            <button class="primary" type="submit">Confirmar</button>
+                        </div>
+                        <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+                    </form>
+                </div>
+                <div class="success" id="success" role="status" hidden>
+                    <h2>Desafio concluído</h2>
+                    <p>Código correto. Equipamento identificado!</p>
+                    <p>Para equipamentos elétricos energizados, use um extintor indicado para incêndios de classe C. Seu agente extintor não conduz eletricidade, reduzindo o risco de choque. Extintores de CO₂ e de pó químico ABC são exemplos, desde que identificados para essa classe.</p>
+                </div>
+            </div>
+        </main>
+        <footer class="simulation">Simulação de emergência para o desafio</footer>
+        <div class="bottom-bar" aria-hidden="true"></div>
+    </section>
+
+    <script>
+        const CODIGO_ACESSO = '#tomacuidado';
+        const CODIGO_EXTINTOR = '79742';
+
+        const startScreen = document.getElementById('startScreen');
+        const emergencyScreen = document.getElementById('emergencyScreen');
+        const accessCode = document.getElementById('accessCode');
+        const accessFeedback = document.getElementById('accessFeedback');
+        const codeInput = document.getElementById('codeInput');
+        const feedback = document.getElementById('feedback');
+
+        document.getElementById('accessForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (accessCode.value.trim().toLowerCase() !== CODIGO_ACESSO) {
+                accessFeedback.textContent = accessCode.value.trim() ? 'Código incorreto. Confira a pista do desafio anterior.' : 'Informe o código da pista anterior.';
+                accessCode.setAttribute('aria-invalid', 'true');
+                accessCode.focus();
+                return;
+            }
+            startScreen.hidden = true;
+            emergencyScreen.hidden = false;
+            codeInput.focus();
+        });
+
+        accessCode.addEventListener('input', () => {
+            accessFeedback.textContent = '';
+            accessCode.removeAttribute('aria-invalid');
+        });
+
+        document.getElementById('codeForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            if (codeInput.value.trim().toUpperCase() !== CODIGO_EXTINTOR.toUpperCase()) {
+                feedback.textContent = codeInput.value.trim() ? 'Código incorreto. Verifique a etiqueta e tente novamente.' : 'Informe o código da etiqueta.';
+                codeInput.setAttribute('aria-invalid', 'true');
+                codeInput.focus();
+                return;
+            }
+            document.getElementById('challengeContent').hidden = true;
+            document.getElementById('success').hidden = false;
+            emergencyScreen.classList.add('resolved');
+            document.getElementById('systemStatus').textContent = 'Temperatura controlada';
+            const warningLabel = emergencyScreen.querySelector('.warning-label');
+            warningLabel.querySelector('span').textContent = '✓';
+            warningLabel.lastChild.textContent = ' Temperatura estabilizada';
+            const heading = emergencyScreen.querySelector('h1');
+            heading.firstChild.textContent = 'Temperatura ';
+            heading.querySelector('strong').textContent = 'sob controle';
+            emergencyScreen.querySelector('.alert-copy').textContent = 'O sistema foi estabilizado. O risco de superaquecimento foi controlado nesta simulação.';
+            emergencyScreen.querySelector('.heat-display').setAttribute('aria-label', 'Temperatura em nível normal');
+            emergencyScreen.querySelector('.heat-heading strong').textContent = 'Normal';
+        });
+
+        codeInput.addEventListener('input', () => {
+            feedback.textContent = '';
+            codeInput.removeAttribute('aria-invalid');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missão Segurança | Escape Room</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            color-scheme: dark;
+            --background: #07100e;
+            --surface: #101e1a;
+            --text: #f0f8f2;
+            --muted: #a7bbb0;
+            --green: #64f7a4;
+            --cyan: #72dce2;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            background-color: var(--background);
+            background-image: linear-gradient(rgba(100, 247, 164, .035) 1px, transparent 1px), linear-gradient(90deg, rgba(100, 247, 164, .035) 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        main {
+            width: min(100% - 40px, 980px);
+            margin: 0 auto;
+            padding: 48px 0 64px;
+        }
+
+        .topline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #294139;
+            color: var(--green);
+            font: 700 11px 'Orbitron', monospace;
+            text-transform: uppercase;
+        }
+
+        .topline span:last-child { color: var(--muted); }
+
+        header { padding: 72px 0 48px; }
+        .eyebrow { margin: 0 0 16px; color: var(--cyan); font-weight: 700; text-transform: uppercase; }
+        h1 { margin: 0; font: 900 48px/1.15 'Orbitron', monospace; text-transform: uppercase; }
+        h1 span { color: var(--green); }
+        .intro { margin: 18px 0 0; color: var(--muted); font-size: 20px; }
+
+        .section-heading {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0 0 16px;
+            color: var(--muted);
+            font: 700 11px 'Orbitron', monospace;
+            text-transform: uppercase;
+        }
+
+        .section-heading::after { content: ''; height: 1px; flex: 1; background: #294139; }
+        .links { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .mission {
+            display: flex;
+            min-height: 118px;
+            align-items: center;
+            gap: 20px;
+            padding: 22px;
+            color: var(--text);
+            text-decoration: none;
+            background: var(--surface);
+            border: 1px solid #294139;
+            border-radius: 4px;
+            transition: border-color .2s, background-color .2s;
+        }
+
+        .mission:hover, .mission:focus-visible { border-color: var(--green); background: #173028; }
+        .mission:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; }
+        .number { align-self: flex-start; color: var(--green); font: 700 12px 'Orbitron', monospace; }
+        .label { flex: 1; min-width: 0; }
+        .label strong { display: block; font-size: 22px; line-height: 1.15; }
+        .label small { display: block; margin-top: 6px; color: var(--muted); font-size: 15px; }
+        .arrow { color: var(--cyan); font-size: 26px; line-height: 1; }
+
+        @media (max-width: 600px) {
+            main { padding-top: 28px; }
+            header { padding: 56px 0 38px; }
+            h1 { font-size: 30px; }
+            .links { grid-template-columns: 1fr; }
+            .mission { min-height: 98px; }
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="topline"><span>Escape Room / SIPAT</span><span>Missão 01</span></div>
+        <header>
+            <p class="eyebrow">A segurança começa aqui</p>
+            <h1>Missão <span>Segurança</span></h1>
+            <p class="intro">Escolha uma etapa para começar.</p>
+        </header>
+
+        <nav aria-label="Etapas do escape room">
+            <p class="section-heading">Selecionar etapa</p>
+            <div class="links">
+                <a class="mission" href="Entrada_Escape_Room.html">
+                    <span class="number">01</span>
+                    <span class="label"><strong>Entrada</strong><small>Início da missão</small></span>
+                    <span class="arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="mission" href="Desafio_iPad_1_V2.html">
+                    <span class="number">02</span>
+                    <span class="label"><strong>Sistema de segurança</strong><small>Desafio do iPad</small></span>
+                    <span class="arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="mission" href="Desafio_computador_superaquecido.html">
+                    <span class="number">03</span>
+                    <span class="label"><strong>Computador superaquecido</strong><small>Sistema em risco</small></span>
+                    <span class="arrow" aria-hidden="true">&#8599;</span>
+                </a>
+                <a class="mission" href="Desafio_kit_protecao_epis.html">
+                    <span class="number">04</span>
+                    <span class="label"><strong>Kit de proteção</strong><small>Manutenção da lavadora de bins</small></span>
+                    <span class="arrow" aria-hidden="true">&#8599;</span>
+                </a>
+            </div>
+        </nav>
+    </main>
+</body>
+</html>

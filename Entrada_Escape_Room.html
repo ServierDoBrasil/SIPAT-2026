@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Escape Room - Missão Segurança | SIPAT</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'Orbitron', monospace;
+            background: #000;
+            min-height: 100vh;
+            min-height: -webkit-fill-available;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* === FUNDO ANIMADO COM GRID === */
+        .grid-background {
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: 
+                linear-gradient(90deg, rgba(0, 255, 136, 0.03) 1px, transparent 1px),
+                linear-gradient(rgba(0, 255, 136, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: grid-move 20s linear infinite;
+            transform-origin: center center;
+        }
+
+        @keyframes grid-move {
+            0% { transform: perspective(500px) rotateX(60deg) translateY(0); }
+            100% { transform: perspective(500px) rotateX(60deg) translateY(40px); }
+        }
+
+        /* === PARTÍCULAS FLUTUANTES === */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88;
+            animation: float-up 8s infinite;
+            opacity: 0;
+        }
+
+        @keyframes float-up {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) scale(1); opacity: 0; }
+        }
+
+        /* === RAIOS DE LUZ === */
+        .light-rays {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 150vmax;
+            height: 150vmax;
+            transform: translate(-50%, -50%);
+            background: conic-gradient(from 0deg, 
+                transparent 0deg, 
+                rgba(0, 255, 136, 0.08) 10deg, 
+                transparent 20deg,
+                transparent 40deg,
+                rgba(0, 212, 255, 0.08) 50deg,
+                transparent 60deg,
+                transparent 80deg,
+                rgba(0, 255, 136, 0.08) 90deg,
+                transparent 100deg,
+                transparent 120deg,
+                rgba(0, 212, 255, 0.08) 130deg,
+                transparent 140deg,
+                transparent 160deg,
+                rgba(0, 255, 136, 0.08) 170deg,
+                transparent 180deg,
+                transparent 200deg,
+                rgba(0, 212, 255, 0.08) 210deg,
+                transparent 220deg,
+                transparent 240deg,
+                rgba(0, 255, 136, 0.08) 250deg,
+                transparent 260deg,
+                transparent 280deg,
+                rgba(0, 212, 255, 0.08) 290deg,
+                transparent 300deg,
+                transparent 320deg,
+                rgba(0, 255, 136, 0.08) 330deg,
+                transparent 340deg,
+                transparent 360deg
+            );
+            animation: rotate-rays 30s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes rotate-rays {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* === CÍRCULOS PULSANTES === */
+        .pulse-rings {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        .ring {
+            position: absolute;
+            border: 2px solid rgba(0, 255, 136, 0.3);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pulse-ring 4s ease-out infinite;
+        }
+
+        .ring:nth-child(1) { animation-delay: 0s; }
+        .ring:nth-child(2) { animation-delay: 1s; }
+        .ring:nth-child(3) { animation-delay: 2s; }
+        .ring:nth-child(4) { animation-delay: 3s; }
+
+        @keyframes pulse-ring {
+            0% { width: 50px; height: 50px; opacity: 1; border-color: rgba(0, 255, 136, 0.8); }
+            100% { width: 90vmin; height: 90vmin; opacity: 0; border-color: rgba(0, 212, 255, 0); }
+        }
+
+        /* === SCANNER LINE === */
+        .scanner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff88, #00d4ff, #00ff88, transparent);
+            box-shadow: 0 0 15px #00ff88, 0 0 30px #00ff88, 0 0 45px #00d4ff;
+            animation: scan 3s ease-in-out infinite;
+        }
+
+        @keyframes scan {
+            0%, 100% { top: 0; opacity: 1; }
+            50% { top: calc(100% - 3px); opacity: 0.5; }
+        }
+
+        /* === CONTEÚDO PRINCIPAL === */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 20px;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        /* === BADGE SIPAT === */
+        .sipat-badge {
+            display: inline-block;
+            padding: 12px 35px;
+            background: transparent;
+            border: 2px solid #ff6b35;
+            border-radius: 30px;
+            color: #ff6b35;
+            font-size: 1.1rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            margin-bottom: 50px;
+            position: relative;
+            overflow: hidden;
+            animation: badge-glow 2s ease-in-out infinite;
+        }
+
+        @keyframes badge-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 107, 53, 0.3), inset 0 0 20px rgba(255, 107, 53, 0.1); }
+            50% { box-shadow: 0 0 40px rgba(255, 107, 53, 0.6), inset 0 0 30px rgba(255, 107, 53, 0.2); }
+        }
+
+        /* === TÍTULO PRINCIPAL === */
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            margin-bottom: 15px;
+            position: relative;
+            line-height: 1.2;
+        }
+
+        .title-line {
+            display: block;
+            position: relative;
+        }
+
+        .title-text {
+            background: linear-gradient(135deg, #00ff88 0%, #00d4ff 50%, #00ff88 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient-shift 3s linear infinite, title-flicker 5s infinite;
+            position: relative;
+            display: inline-block;
+        }
+
+        /* Efeito de brilho atrás do texto */
+        .title-text::before {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, #00ff88, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: blur(20px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        @keyframes gradient-shift {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        @keyframes title-flicker {
+            0%, 100% { opacity: 1; }
+            92% { opacity: 1; }
+            93% { opacity: 0.8; }
+            94% { opacity: 1; }
+            96% { opacity: 0.9; }
+            97% { opacity: 1; }
+        }
+
+        /* === EFEITO GLITCH CORRIGIDO === */
+        .glitch-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-wrapper .glitch-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            font-size: inherit;
+            font-weight: inherit;
+            letter-spacing: inherit;
+            text-transform: inherit;
+        }
+
+        .glitch-wrapper .glitch-layer.magenta {
+            color: #ff00ff;
+            animation: glitch-magenta 3s infinite;
+            clip-path: polygon(0 0, 100% 0, 100% 33%, 0 33%);
+            opacity: 0.8;
+        }
+
+        .glitch-wrapper .glitch-layer.cyan {
+            color: #00ffff;
+            animation: glitch-cyan 2s infinite;
+            clip-path: polygon(0 66%, 100% 66%, 100% 100%, 0 100%);
+            opacity: 0.8;
+        }
+
+        @keyframes glitch-magenta {
+            0%, 100% { transform: translateX(0); }
+            10% { transform: translateX(-3px); }
+            20% { transform: translateX(2px); }
+            30% { transform: translateX(0); }
+            40% { transform: translateX(3px); }
+            50% { transform: translateX(-2px); }
+            60% { transform: translateX(0); }
+            70% { transform: translateX(-3px); }
+            80% { transform: translateX(2px); }
+            90% { transform: translateX(0); }
+        }
+
+        @keyframes glitch-cyan {
+            0%, 100% { transform: translateX(0); }
+            15% { transform: translateX(3px); }
+            25% { transform: translateX(-2px); }
+            35% { transform: translateX(0); }
+            45% { transform: translateX(-3px); }
+            55% { transform: translateX(2px); }
+            65% { transform: translateX(0); }
+            75% { transform: translateX(3px); }
+            85% { transform: translateX(-2px); }
+            95% { transform: translateX(0); }
+        }
+
+        /* === LINHA DECORATIVA === */
+        .divider {
+            width: 60%;
+            max-width: 350px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff88, #00d4ff, #00ff88, transparent);
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .divider::before {
+            content: '◆';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00ff88;
+            font-size: 1.5rem;
+            background: #000;
+            padding: 0 15px;
+            animation: diamond-pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes diamond-pulse {
+            0%, 100% { text-shadow: 0 0 10px #00ff88, 0 0 20px #00ff88; transform: translate(-50%, -50%) scale(1); }
+            50% { text-shadow: 0 0 20px #00ff88, 0 0 40px #00ff88, 0 0 60px #00d4ff; transform: translate(-50%, -50%) scale(1.2); }
+        }
+
+        /* === SUBTÍTULO === */
+        .subtitle {
+            font-size: 2.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 12px;
+            color: #fff;
+            position: relative;
+            animation: subtitle-glow 3s ease-in-out infinite;
+            line-height: 1.4;
+        }
+
+        .subtitle-line {
+            display: block;
+        }
+
+        .subtitle span {
+            display: inline-block;
+            animation: letter-wave 2s ease-in-out infinite;
+        }
+
+        @keyframes letter-wave {
+            0%, 100% { transform: translateY(0); color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.5); }
+            50% { transform: translateY(-8px); color: #00ff88; text-shadow: 0 0 30px #00ff88, 0 0 60px #00ff88; }
+        }
+
+        @keyframes subtitle-glow {
+            0%, 100% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.3); }
+            50% { text-shadow: 0 0 40px rgba(0, 255, 136, 0.5), 0 0 80px rgba(0, 212, 255, 0.3); }
+        }
+
+        /* Delays para animação das letras - MISSÃO */
+        .subtitle-line:nth-child(1) span:nth-child(1) { animation-delay: 0s; }
+        .subtitle-line:nth-child(1) span:nth-child(2) { animation-delay: 0.08s; }
+        .subtitle-line:nth-child(1) span:nth-child(3) { animation-delay: 0.16s; }
+        .subtitle-line:nth-child(1) span:nth-child(4) { animation-delay: 0.24s; }
+        .subtitle-line:nth-child(1) span:nth-child(5) { animation-delay: 0.32s; }
+        .subtitle-line:nth-child(1) span:nth-child(6) { animation-delay: 0.40s; }
+
+        /* Delays para animação das letras - SEGURANÇA */
+        .subtitle-line:nth-child(2) span:nth-child(1) { animation-delay: 0.48s; }
+        .subtitle-line:nth-child(2) span:nth-child(2) { animation-delay: 0.56s; }
+        .subtitle-line:nth-child(2) span:nth-child(3) { animation-delay: 0.64s; }
+        .subtitle-line:nth-child(2) span:nth-child(4) { animation-delay: 0.72s; }
+        .subtitle-line:nth-child(2) span:nth-child(5) { animation-delay: 0.80s; }
+        .subtitle-line:nth-child(2) span:nth-child(6) { animation-delay: 0.88s; }
+        .subtitle-line:nth-child(2) span:nth-child(7) { animation-delay: 0.96s; }
+        .subtitle-line:nth-child(2) span:nth-child(8) { animation-delay: 1.04s; }
+        .subtitle-line:nth-child(2) span:nth-child(9) { animation-delay: 1.12s; }
+
+        /* === ÍCONE DE CADEADO === */
+        .lock-icon {
+            font-size: 5rem;
+            margin-top: 60px;
+            animation: lock-bounce 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 25px #00ff88);
+        }
+
+        @keyframes lock-bounce {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-12px) rotate(-5deg); }
+            75% { transform: translateY(-12px) rotate(5deg); }
+        }
+
+        /* === CANTOS DECORATIVOS === */
+        .corner {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border: 3px solid #00ff88;
+            opacity: 0.6;
+        }
+
+        .corner-tl { top: 25px; left: 25px; border-right: none; border-bottom: none; }
+        .corner-tr { top: 25px; right: 25px; border-left: none; border-bottom: none; }
+        .corner-bl { bottom: 25px; left: 25px; border-right: none; border-top: none; }
+        .corner-br { bottom: 25px; right: 25px; border-left: none; border-top: none; }
+
+        .corner::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #00ff88;
+            box-shadow: 0 0 12px #00ff88;
+            border-radius: 50%;
+        }
+
+        .corner-tl::before { top: -5px; left: -5px; }
+        .corner-tr::before { top: -5px; right: -5px; }
+        .corner-bl::before { bottom: -5px; left: -5px; }
+        .corner-br::before { bottom: -5px; right: -5px; }
+
+        /* ============================================
+           === OTIMIZAÇÕES PARA iPAD RETRATO ===
+           ============================================ */
+        
+        /* iPad Mini (768 x 1024) */
+        @media screen and (min-width: 750px) and (max-width: 850px) and (min-height: 1000px) and (orientation: portrait) {
+            .main-title {
+                font-size: 5rem;
+                letter-spacing: 10px;
+            }
+            .subtitle {
+                font-size: 3rem;
+                letter-spacing: 14px;
+            }
+            .sipat-badge {
+                font-size: 1.2rem;
+                padding: 14px 40px;
+                margin-bottom: 60px;
+            }
+            .lock-icon {
+                font-size: 6rem;
+                margin-top: 70px;
+            }
+            .divider {
+                margin: 50px auto;
+            }
+            .corner {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        /* iPad Standard / Air (820 x 1180) e iPad 10.2" (810 x 1080) */
+        @media screen and (min-width: 800px) and (max-width: 850px) and (min-height: 1050px) and (orientation: portrait) {
+            .main-title {
+                font-size: 5.5rem;
+                letter-spacing: 12px;
+            }
+            .subtitle {
+                font-size: 3.2rem;
+                letter-spacing: 16px;
+            }
+            .sipat-badge {
+                font-size: 1.3rem;
+                padding: 15px 45px;
+                margin-bottom: 70px;
+            }
+            .lock-icon {
+                font-size: 7rem;
+                margin-top: 80px;
+            }
+            .divider {
+                margin: 55px auto;
+                max-width: 400px;
+            }
+            .corner {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        /* iPad Pro 11" (834 x 1194) */
+        @media screen and (min-width: 830px) and (max-width: 840px) and (min-height: 1180px) and (orientation: portrait) {
+            .main-title {
+                font-size: 6rem;
+                letter-spacing: 14px;
+            }
+            .subtitle {
+                font-size: 3.5rem;
+                letter-spacing: 18px;
+            }
+            .sipat-badge {
+                font-size: 1.4rem;
+                padding: 16px 50px;
+                margin-bottom: 80px;
+            }
+            .lock-icon {
+                font-size: 8rem;
+                margin-top: 90px;
+            }
+            .divider {
+                margin: 60px auto;
+                max-width: 450px;
+            }
+            .corner {
+                width: 90px;
+                height: 90px;
+            }
+        }
+
+        /* iPad Pro 12.9" (1024 x 1366) */
+        @media screen and (min-width: 1020px) and (max-width: 1030px) and (min-height: 1350px) and (orientation: portrait) {
+            .main-title {
+                font-size: 7rem;
+                letter-spacing: 16px;
+            }
+            .subtitle {
+                font-size: 4rem;
+                letter-spacing: 22px;
+            }
+            .sipat-badge {
+                font-size: 1.5rem;
+                padding: 18px 55px;
+                margin-bottom: 90px;
+                letter-spacing: 7px;
+            }
+            .lock-icon {
+                font-size: 9rem;
+                margin-top: 100px;
+            }
+            .divider {
+                margin: 70px auto;
+                max-width: 500px;
+                height: 3px;
+            }
+            .divider::before {
+                font-size: 2rem;
+            }
+            .corner {
+                width: 100px;
+                height: 100px;
+                border-width: 4px;
+            }
+            .corner::before {
+                width: 12px;
+                height: 12px;
+            }
+        }
+
+        /* Fallback genérico para tablets em retrato */
+        @media screen and (min-width: 700px) and (max-width: 1100px) and (orientation: portrait) {
+            .main-title {
+                font-size: clamp(4rem, 8vw, 7rem);
+                letter-spacing: clamp(8px, 2vw, 16px);
+            }
+            .subtitle {
+                font-size: clamp(2.5rem, 5vw, 4rem);
+                letter-spacing: clamp(10px, 2.5vw, 22px);
+            }
+            .sipat-badge {
+                font-size: clamp(1rem, 2vw, 1.5rem);
+                margin-bottom: clamp(50px, 8vh, 90px);
+            }
+            .lock-icon {
+                font-size: clamp(5rem, 10vw, 9rem);
+                margin-top: clamp(60px, 10vh, 100px);
+            }
+        }
+
+        /* === PEQUENOS DISPOSITIVOS (fallback) === */
+        @media screen and (max-width: 699px) {
+            .main-title {
+                font-size: 2.5rem;
+                letter-spacing: 5px;
+            }
+            .subtitle {
+                font-size: 1.5rem;
+                letter-spacing: 8px;
+            }
+            .sipat-badge {
+                font-size: 0.9rem;
+                letter-spacing: 3px;
+                padding: 10px 25px;
+            }
+            .lock-icon {
+                font-size: 4rem;
+            }
+            .corner {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Effects -->
+    <div class="grid-background"></div>
+    <div class="light-rays"></div>
+    <div class="scanner"></div>
+    
+    <!-- Pulse Rings -->
+    <div class="pulse-rings">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
+    </div>
+
+    <!-- Particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Corner Decorations -->
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <div class="sipat-badge">🛡️ SIPAT 2026</div>
+        
+        <h1 class="main-title">
+            <span class="title-line">
+                <span class="glitch-wrapper">
+                    <span class="title-text" data-text="ESCAPE">ESCAPE</span>
+                    <span class="glitch-layer magenta" aria-hidden="true">ESCAPE</span>
+                    <span class="glitch-layer cyan" aria-hidden="true">ESCAPE</span>
+                </span>
+            </span>
+            <span class="title-line">
+                <span class="glitch-wrapper">
+                    <span class="title-text" data-text="ROOM">ROOM</span>
+                    <span class="glitch-layer magenta" aria-hidden="true">ROOM</span>
+                    <span class="glitch-layer cyan" aria-hidden="true">ROOM</span>
+                </span>
+            </span>
+        </h1>
+        
+        <div class="divider"></div>
+        
+        <h2 class="subtitle">
+            <span class="subtitle-line">
+                <span>M</span><span>I</span><span>S</span><span>S</span><span>Ã</span><span>O</span>
+            </span>
+            <span class="subtitle-line">
+                <span>S</span><span>E</span><span>G</span><span>U</span><span>R</span><span>A</span><span>N</span><span>Ç</span><span>A</span>
+            </span>
+        </h2>
+
+        <div class="lock-icon">🔐</div>
+    </div>
+
+    <!-- Particle Generator -->
+    <script>
+        const particlesContainer = document.getElementById('particles');
+        const particleCount = 50;
+
+        for (let i = 0; i < particleCount; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 8 + 's';
+            particle.style.animationDuration = (5 + Math.random() * 5) + 's';
+            
+            const colors = ['#00ff88', '#00d4ff', '#ff6b35', '#ffffff'];
+            particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            particle.style.boxShadow = `0 0 10px ${particle.style.background}, 0 0 20px ${particle.style.background}`;
+            
+            const size = 2 + Math.random() * 4;
+            particle.style.width = size + 'px';
+            particle.style.height = size + 'px';
+            
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+</body>
+</html>

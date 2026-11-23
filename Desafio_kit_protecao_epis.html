@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Escape Room - Missão Segurança | Manutenção da Lavadora de Bins</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        #gameScreen[hidden] {
+            display: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        /* Header com alerta */
+        .alert-header {
+            background: linear-gradient(90deg, #ff4444, #cc0000);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            animation: pulse-alert 2s infinite;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+        }
+
+        @keyframes pulse-alert {
+            0%, 100% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.5); }
+            50% { box-shadow: 0 0 50px rgba(255, 0, 0, 0.8); }
+        }
+
+        .alert-header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-header .siren {
+            animation: rotate 1s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Timer */
+        .timer-container {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer.warning {
+            color: #ffaa00;
+            text-shadow: 0 0 20px #ffaa00;
+        }
+
+        .timer.danger {
+            color: #ff4444;
+            text-shadow: 0 0 20px #ff4444;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Ordem de Serviço */
+        .ordem-servico {
+            background: #f5f5dc;
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 5px solid #cc0000;
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .ordem-servico h3 {
+            color: #cc0000;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .ordem-servico .riscos {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px dashed #856404;
+            margin-top: 10px;
+        }
+
+        .ordem-servico .riscos span {
+            display: inline-block;
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 5px;
+            font-weight: bold;
+        }
+
+        /* Layout principal */
+        .game-area {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+            align-items: start;
+            gap: 24px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 980px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Área de EPIs */
+        .epi-box {
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .epi-box h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #00ff88;
+            font-size: 1.3rem;
+        }
+
+        .epi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+            gap: 12px;
+        }
+
+        .epi-item {
+            background: rgba(255,255,255,0.05);
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 15px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-height: 158px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .epi-item:hover {
+            transform: scale(1.05);
+            border-color: #00ff88;
+            box-shadow: 0 0 20px rgba(0,255,136,0.3);
+        }
+
+        .epi-item.selected {
+            border-color: #00ff88;
+            background: rgba(0,255,136,0.2);
+            box-shadow: 0 0 25px rgba(0,255,136,0.5);
+        }
+
+        .epi-item.wrong,
+        .epi-item[data-correct="false"].selected {
+            border-color: #ff4444;
+            background: rgba(255,68,68,0.2);
+        }
+
+        .epi-item[data-correct="false"]::after {
+            content: "";
+            display: block;
+            width: 30px;
+            height: 30px;
+            margin: 10px auto 0;
+        }
+
+        .epi-item[data-correct="false"].selected::after {
+            content: "×";
+            color: #ff4444;
+            font-size: 2rem;
+            font-weight: 900;
+            line-height: 30px;
+            text-shadow: 0 0 10px rgba(255,68,68,0.7);
+        }
+
+        .epi-item .icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .epi-item .name {
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .epi-item .letter {
+            display: block;
+            visibility: hidden;
+            background: gold;
+            color: #333;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            margin: 10px auto 0;
+            line-height: 30px;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .epi-item.selected .letter {
+            visibility: visible;
+            animation: pop 0.3s ease;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Área do Operador */
+        .operator-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .operator-area h2 {
+            margin-bottom: 20px;
+            color: #ffaa00;
+        }
+
+        .operator-container {
+            position: relative;
+            width: 300px;
+            height: 500px;
+            max-width: 100%;
+        }
+
+        /* Boneco SVG */
+        .operator-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* EPIs equipados no boneco */
+        .equipped-epi {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+
+        .equipped-epi.visible {
+            opacity: 1;
+        }
+
+        /* Código secreto */
+        .code-display {
+            background: #000;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+            border: 3px solid #333;
+        }
+
+        .code-display h3 {
+            color: #888;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .code-letters {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .code-letter {
+            width: 50px;
+            height: 60px;
+            background: #222;
+            border: 2px solid #444;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+        }
+
+        .code-letter.empty {
+            color: #333;
+        }
+
+        /* Botões de controle */
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-verify {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+        }
+
+        .btn-verify:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(0,255,136,0.5);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #666, #444);
+            color: #fff;
+        }
+
+        .btn-reset:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #ffaa00, #ff8800);
+            color: #000;
+        }
+
+        /* Modal de resultado */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            max-width: 500px;
+            border: 3px solid;
+        }
+
+        .modal-content.success {
+            border-color: #00ff88;
+            box-shadow: 0 0 50px rgba(0,255,136,0.5);
+        }
+
+        .modal-content.failure {
+            border-color: #ff4444;
+            box-shadow: 0 0 50px rgba(255,68,68,0.5);
+        }
+
+        .modal-content h2 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-content.success h2 {
+            color: #00ff88;
+        }
+
+        .modal-content.failure h2 {
+            color: #ff4444;
+        }
+
+        .modal-content .big-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-content p {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .final-code {
+            font-size: 3rem;
+            font-weight: bold;
+            color: gold;
+            text-shadow: 0 0 20px gold;
+            letter-spacing: 15px;
+            margin: 20px 0;
+        }
+
+        /* Contador de seleções */
+        .selection-counter {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .selection-counter span {
+            font-size: 1.5rem;
+            color: #00ff88;
+        }
+
+        /* Instruções */
+        .instructions {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #00ff88;
+        }
+
+        .instructions h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
+
+            .operator-container {
+                width: 250px;
+                height: 400px;
+            }
+            
+            .alert-header h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="gameScreen">
+        <!-- Cabeçalho de Alerta -->
+        <div class="alert-header">
+            <h1>
+                <span class="siren">🚨</span>
+                <span>ALERTA! Manutenção da Lavadora de Bins</span>
+                <span class="siren">🚨</span>
+            </h1>
+        </div>
+
+        <!-- Timer -->
+        <div class="timer-container">
+            <div class="timer" id="timer">05:00</div>
+            <button class="btn btn-start" id="startBtn" onclick="startTimer()">▶ INICIAR CRONÔMETRO</button>
+        </div>
+
+        <!-- Ordem de Serviço -->
+        <div class="ordem-servico">
+            <h3>📋 ORDEM DE SERVIÇO - MANUTENÇÃO DA LAVADORA DE BINS</h3>
+            <p><strong>Local:</strong> <span>Sala de lavagem de bins e utensílios de produção</span></p>
+            <p><strong>Situação:</strong> <span>Após o ciclo de lavagem, a lavadora está posicionada no chão e isolada para inspeção do dreno e dos bicos de aspersão. A abertura pode liberar líquido residual e molhar o piso; o teste funcional posterior gera ruído.</span></p>
+            <div class="riscos">
+                <strong>⚠️ RISCOS IDENTIFICADOS:</strong>
+                <div>
+                    <span>🧪 Respingos de solução de limpeza</span>
+                    <span>🧼 Piso molhado e risco de escorregamento</span>
+                    <span>🔊 Ruído no ciclo de lavagem</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Instruções -->
+        <div class="instructions">
+            <h3>📖 Como Jogar:</h3>
+            <ol>
+                <li>Analise os riscos descritos na Ordem de Serviço</li>
+                <li>Selecione os <strong>5 itens corretos</strong> na lista misturada</li>
+                <li>Item errado selecionado: X vermelho e penalidade imediata de <strong>30 segundos</strong></li>
+                <li>Observe o operador sendo equipado</li>
+                <li>Clique em <strong>"VERIFICAR KIT"</strong> para validar suas escolhas</li>
+                <li>Se acertar, você receberá o <strong>CÓDIGO SECRETO</strong> para o próximo cadeado!</li>
+            </ol>
+        </div>
+
+        <!-- Área do Jogo -->
+        <div class="game-area">
+            <div class="epi-box">
+                <h2>🧰 ITENS DE SEGURANÇA</h2>
+                <div class="epi-grid" id="allEpis">
+                    <div class="epi-item" data-epi="capacete" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">⛑️</div>
+                        <div class="name">Capacete com Jugular</div>
+                    </div>
+                    <div class="epi-item" data-epi="oculos-sol" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🕶️</div>
+                        <div class="name">Óculos de Sol</div>
+                    </div>
+                    <div class="epi-item" data-epi="protetor" data-correct="true" data-letter="L" onclick="toggleEpi(this)">
+                        <div class="icon">🎧</div>
+                        <div class="name">Protetor Auricular</div>
+                        <div class="letter">L</div>
+                    </div>
+                    <div class="epi-item" data-epi="respirador" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">😷</div>
+                        <div class="name">Respirador PFF2</div>
+                    </div>
+                    <div class="epi-item" data-epi="oculos" data-correct="true" data-letter="A" onclick="toggleEpi(this)">
+                        <div class="icon">🥽</div>
+                        <div class="name">Óculos de Segurança</div>
+                        <div class="letter">A</div>
+                    </div>
+                    <div class="epi-item" data-epi="protetor-facial" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🛡️</div>
+                        <div class="name">Protetor Facial</div>
+                    </div>
+                    <div class="epi-item" data-epi="luva-cozinha" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🧑‍🍳</div>
+                        <div class="name">Luva de Cozinha</div>
+                    </div>
+                    <div class="epi-item" data-epi="luvas" data-correct="true" data-letter="V" onclick="toggleEpi(this)">
+                        <div class="icon">🧤</div>
+                        <div class="name">Luvas Nitrílicas</div>
+                        <div class="letter">V</div>
+                    </div>
+                    <div class="epi-item" data-epi="colete" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🦺</div>
+                        <div class="name">Colete Refletivo</div>
+                    </div>
+                    <div class="epi-item" data-epi="botas" data-correct="true" onclick="toggleEpi(this)">
+                        <div class="icon">👢</div>
+                        <div class="name">Botas com Biqueira</div>
+                    </div>
+                    <div class="epi-item" data-epi="fone" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🎵</div>
+                        <div class="name">Fone de Ouvido Comum</div>
+                    </div>
+                    <div class="epi-item" data-epi="capacete-bike" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🚴</div>
+                        <div class="name">Capacete de Ciclista</div>
+                    </div>
+                    <div class="epi-item" data-epi="cinturao" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🪢</div>
+                        <div class="name">Cinturão para Trabalho em Altura</div>
+                    </div>
+                    <div class="epi-item" data-epi="avental" data-correct="true" data-letter="A" onclick="toggleEpi(this)">
+                        <div class="icon">🥼</div>
+                        <div class="name">Avental Impermeável</div>
+                        <div class="letter">A</div>
+                    </div>
+                    <div class="epi-item" data-epi="perneira" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🦵</div>
+                        <div class="name">Perneira de Raspa</div>
+                    </div>
+                    <div class="epi-item" data-epi="mascara-carnaval" data-correct="false" onclick="toggleEpi(this)">
+                        <div class="icon">🎭</div>
+                        <div class="name">Máscara de Carnaval</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operador -->
+            <div class="operator-area">
+                <h2>👷 OPERADOR PADRÃO</h2>
+                <div class="operator-container">
+                    <!-- SVG do Boneco -->
+                    <svg class="operator-svg" viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Corpo base -->
+                        <defs>
+                            <linearGradient id="uniformGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#2563eb"/>
+                                <stop offset="100%" style="stop-color:#1d4ed8"/>
+                            </linearGradient>
+                        </defs>
+                        
+                        <!-- Cabeça -->
+                        <circle cx="100" cy="60" r="35" fill="#fcd5b8" stroke="#e5b89a" stroke-width="2"/>
+                        
+                        <!-- Pescoço -->
+                        <rect x="90" y="90" width="20" height="20" fill="#fcd5b8"/>
+                        
+                        <!-- Corpo/Uniforme -->
+                        <path d="M 60 110 L 60 250 L 140 250 L 140 110 L 120 100 L 80 100 Z" fill="url(#uniformGradient)" stroke="#1e40af" stroke-width="2"/>
+                        
+                        <!-- Detalhes do uniforme -->
+                        <rect x="85" y="115" width="30" height="8" rx="2" fill="#fbbf24"/>
+                        <text x="100" y="122" text-anchor="middle" font-size="6" fill="#000">CIPA</text>
+                        
+                        <!-- Bolsos -->
+                        <rect x="70" y="180" width="25" height="30" rx="3" fill="#1e40af" stroke="#1e3a8a"/>
+                        <rect x="105" y="180" width="25" height="30" rx="3" fill="#1e40af" stroke="#1e3a8a"/>
+                        
+                        <!-- Braços -->
+                        <rect x="35" y="115" width="25" height="80" rx="10" fill="url(#uniformGradient)" stroke="#1e40af"/>
+                        <rect x="140" y="115" width="25" height="80" rx="10" fill="url(#uniformGradient)" stroke="#1e40af"/>
+                        
+                        <!-- Mãos -->
+                        <circle cx="47" cy="205" r="15" fill="#fcd5b8" stroke="#e5b89a" id="maoEsquerda"/>
+                        <circle cx="153" cy="205" r="15" fill="#fcd5b8" stroke="#e5b89a" id="maoDireita"/>
+                        
+                        <!-- Pernas -->
+                        <rect x="65" y="250" width="30" height="100" rx="5" fill="#374151"/>
+                        <rect x="105" y="250" width="30" height="100" rx="5" fill="#374151"/>
+                        
+                        <!-- Pés base -->
+                        <ellipse cx="80" cy="355" rx="20" ry="10" fill="#1f2937" id="peEsquerdo"/>
+                        <ellipse cx="120" cy="355" rx="20" ry="10" fill="#1f2937" id="peDireito"/>
+
+                        <!-- Protetor auricular alinhado às orelhas -->
+                        <g class="equipped-epi" id="equipped-protetor">
+                            <path d="M64 63 C60 18 140 18 136 63" fill="none" stroke="#303943" stroke-width="7" stroke-linecap="round"/>
+                            <rect x="55" y="51" width="19" height="28" rx="8" fill="#ef4444" stroke="#991b1b" stroke-width="3"/>
+                            <rect x="126" y="51" width="19" height="28" rx="8" fill="#ef4444" stroke="#991b1b" stroke-width="3"/>
+                            <rect x="59" y="56" width="11" height="18" rx="5" fill="#fca5a5"/>
+                            <rect x="130" y="56" width="11" height="18" rx="5" fill="#fca5a5"/>
+                        </g>
+
+                        <!-- Capacete apoiado no topo da cabeça -->
+                        <g class="equipped-epi" id="equipped-capacete">
+                            <path d="M64 43 C67 25 81 15 100 15 C119 15 133 25 136 43 Z" fill="#fbbf24" stroke="#b45309" stroke-width="3"/>
+                            <path d="M76 37 C81 25 89 21 100 20" fill="none" stroke="#fde68a" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M59 42 Q100 38 141 42 L146 47 Q100 53 54 47 Z" fill="#f59e0b" stroke="#b45309" stroke-width="2"/>
+                            <path d="M94 17 L106 17 L108 23 L92 23 Z" fill="#dc2626"/>
+                        </g>
+
+                        <!-- Óculos transparentes; olhos são redesenhados por cima -->
+                        <g class="equipped-epi" id="equipped-oculos">
+                            <rect x="70" y="44" width="31" height="22" rx="7" fill="#bfdbfe" fill-opacity="0.24" stroke="#334155" stroke-width="3"/>
+                            <rect x="99" y="44" width="31" height="22" rx="7" fill="#bfdbfe" fill-opacity="0.24" stroke="#334155" stroke-width="3"/>
+                            <path d="M99 50 Q100 48 101 50" fill="none" stroke="#334155" stroke-width="3"/>
+                            <path d="M70 49 L64 47 M130 49 L136 47" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round"/>
+                        </g>
+                        <g class="equipped-epi" id="equipped-protetor-facial">
+                            <path d="M65 43 Q100 35 135 43 L129 93 Q100 105 71 93 Z" fill="#bfdbfe" fill-opacity="0.16" stroke="#60a5fa" stroke-width="2.5"/>
+                            <path d="M65 46 L58 42 M135 46 L142 42" fill="none" stroke="#60a5fa" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M73 91 Q100 99 127 91" fill="none" stroke="#dbeafe" stroke-width="2"/>
+                        </g>
+                        <g id="face-details">
+                            <circle cx="88" cy="55" r="5" fill="#fff"/>
+                            <circle cx="112" cy="55" r="5" fill="#fff"/>
+                            <circle cx="89" cy="55" r="2.5" fill="#222"/>
+                            <circle cx="113" cy="55" r="2.5" fill="#222"/>
+                            <path d="M88 72 Q100 81 112 72" stroke="#8a4b3b" stroke-width="2" fill="none" stroke-linecap="round"/>
+                        </g>
+
+                        <!-- Luvas anatômicas sobre as duas mãos -->
+                        <g class="equipped-epi" id="equipped-luvas" stroke="#075985" stroke-width="1.7" stroke-linejoin="round">
+                            <g transform="translate(-4 0)">
+                                <path d="M37 220 C34 218 32 215 32 211 L32 205 Q32 201 35 201 L35 193 Q35 189 38 189 Q41 189 41 193 L41 201 L41 186 Q41 182 44 182 Q47 182 47 186 L47 201 L47 184 Q47 180 50 180 Q53 180 53 184 L53 201 L53 188 Q53 184 56 184 Q60 184 60 188 L60 201 Q63 197 66 199 Q69 201 67 205 L62 214 Q60 220 54 222 L43 222 Q39 222 37 220 Z" fill="#0284c7"/>
+                                <path d="M37 212 Q48 216 63 212 L60 220 Q48 224 40 221 Z" fill="#0369a1" stroke="#075985" stroke-width="1.2"/>
+                                <path d="M38 199 L38 194 M44 198 L44 188 M50 198 L50 186 M56 198 L56 190 M60 203 Q63 205 66 202" fill="none" stroke="#bae6fd" stroke-width="1.2" stroke-linecap="round"/>
+                            </g>
+                            <g transform="translate(204 0) scale(-1 1)">
+                                <path d="M37 220 C34 218 32 215 32 211 L32 205 Q32 201 35 201 L35 193 Q35 189 38 189 Q41 189 41 193 L41 201 L41 186 Q41 182 44 182 Q47 182 47 186 L47 201 L47 184 Q47 180 50 180 Q53 180 53 184 L53 201 L53 188 Q53 184 56 184 Q60 184 60 188 L60 201 Q63 197 66 199 Q69 201 67 205 L62 214 Q60 220 54 222 L43 222 Q39 222 37 220 Z" fill="#0284c7"/>
+                                <path d="M37 212 Q48 216 63 212 L60 220 Q48 224 40 221 Z" fill="#0369a1" stroke="#075985" stroke-width="1.2"/>
+                                <path d="M38 199 L38 194 M44 198 L44 188 M50 198 L50 186 M56 198 L56 190 M60 203 Q63 205 66 202" fill="none" stroke="#bae6fd" stroke-width="1.2" stroke-linecap="round"/>
+                            </g>
+                        </g>
+
+                        <!-- Botas de segurança envolvendo as pernas e os pés -->
+                        <g class="equipped-epi" id="equipped-botas" stroke="#111827" stroke-width="2" stroke-linejoin="round">
+                            <path d="M65 320 L95 320 L95 350 L101 358 L101 368 L57 368 L57 362 Q58 357 63 353 Z" fill="#5b3a29"/>
+                            <path d="M105 320 L135 320 L137 353 Q142 357 143 362 L143 368 L99 368 L99 358 L105 350 Z" fill="#5b3a29"/>
+                            <path d="M67 323 H93 V350 H67 Z M107 323 H133 V350 H107 Z" fill="#704b35" stroke="none"/>
+                            <path d="M67 328 H93 M107 328 H133" stroke="#fbbf24" stroke-width="2.5"/>
+                            <path d="M72 335 L89 335 M111 335 L128 335 M73 341 L88 341 M112 341 L127 341" stroke="#d6b99b" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M60 355 Q70 351 82 355 L85 362 L59 362 Z M118 355 Q130 351 140 355 L142 362 L115 362 Z" fill="#fbbf24" stroke="#b45309" stroke-width="1.5"/>
+                            <path d="M59 362 Q79 359 99 362 L99 368 L58 368 Z M101 362 Q121 359 141 362 L142 368 L101 368 Z" fill="#111827" stroke="#111827"/>
+                        </g>
+
+                        <!-- Opções incorretas também podem ser experimentadas no boneco -->
+                        <g class="equipped-epi" id="equipped-oculos-sol">
+                            <rect x="70" y="45" width="31" height="21" rx="7" fill="#0f172a" fill-opacity="0.88" stroke="#111827" stroke-width="3"/>
+                            <rect x="99" y="45" width="31" height="21" rx="7" fill="#0f172a" fill-opacity="0.88" stroke="#111827" stroke-width="3"/>
+                            <path d="M99 50 Q100 48 101 50 M70 49 L64 47 M130 49 L136 47" fill="none" stroke="#111827" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M76 50 L84 50 M105 50 L113 50" stroke="#94a3b8" stroke-width="2" stroke-linecap="round"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-respirador">
+                            <path d="M66 63 Q75 59 83 63 Q100 68 117 63 Q125 59 134 63 L127 78 Q100 91 73 78 Z" fill="#dbeafe" stroke="#64748b" stroke-width="2"/>
+                            <path d="M70 65 L62 61 M130 65 L138 61 M75 78 Q100 84 125 78" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M93 70 L107 70 M92 74 L108 74" stroke="#94a3b8" stroke-width="1.5"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-luva-cozinha" stroke="#9a3412" stroke-width="2" stroke-linejoin="round">
+                            <g transform="translate(-4 0)">
+                                <path d="M35 220 Q30 216 31 208 L34 194 Q35 189 40 191 L45 198 L44 188 Q44 183 49 184 L54 196 L55 187 Q56 182 61 185 L64 200 Q68 196 71 200 L69 211 Q67 221 58 224 L43 224 Q38 224 35 220 Z" fill="#f97316"/>
+                                <path d="M37 213 Q49 218 65 213 L62 222 Q49 226 39 222 Z" fill="#c2410c"/>
+                                <path d="M39 195 L44 201 M49 188 L52 199 M60 190 L62 201" fill="none" stroke="#fed7aa" stroke-width="2" stroke-linecap="round"/>
+                            </g>
+                            <g transform="translate(5 0)">
+                                <path d="M163 220 Q168 216 167 208 L164 194 Q163 189 158 191 L153 198 L154 188 Q154 183 149 184 L144 196 L143 187 Q142 182 137 185 L134 200 Q130 196 127 200 L129 211 Q131 221 140 224 L155 224 Q160 224 163 220 Z" fill="#f97316"/>
+                                <path d="M161 213 Q149 218 133 213 L136 222 Q149 226 159 222 Z" fill="#c2410c"/>
+                                <path d="M159 195 L154 201 M149 188 L146 199 M138 190 L136 201" fill="none" stroke="#fed7aa" stroke-width="2" stroke-linecap="round"/>
+                            </g>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-colete">
+                            <path d="M77 106 H93 L99 121 V246 H75 V139 L67 145 L59 118 Z M123 106 H107 L101 121 V246 H125 V139 L133 145 L141 118 Z" fill="#facc15" stroke="#a16207" stroke-width="2" stroke-linejoin="round"/>
+                            <path d="M77 177 H98 M102 177 H123" stroke="#f8fafc" stroke-width="5"/>
+                            <path d="M88 110 L96 126 M112 110 L104 126" stroke="#f59e0b" stroke-width="2"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-fone">
+                            <path d="M65 61 C62 16 138 16 135 61" fill="none" stroke="#334155" stroke-width="6" stroke-linecap="round"/>
+                            <rect x="58" y="50" width="17" height="26" rx="7" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+                            <rect x="125" y="50" width="17" height="26" rx="7" fill="#475569" stroke="#1e293b" stroke-width="2"/>
+                            <circle cx="66.5" cy="63" r="4" fill="#94a3b8"/>
+                            <circle cx="133.5" cy="63" r="4" fill="#94a3b8"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-capacete-bike">
+                            <path d="M64 43 C67 28 79 19 98 18 Q124 18 136 39 L140 44 Q102 40 64 48 Z" fill="#dc2626" stroke="#7f1d1d" stroke-width="3"/>
+                            <path d="M80 27 L88 24 M98 23 L105 22 M115 27 L121 30" stroke="#fecaca" stroke-width="2.5" stroke-linecap="round"/>
+                            <path d="M69 45 L76 63 M131 45 L124 63" fill="none" stroke="#7f1d1d" stroke-width="2"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-cinturao" fill="none" stroke="#f97316" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M78 111 L94 177 L80 207 M122 111 L106 177 L120 207 M80 207 L120 207"/>
+                            <path d="M79 215 Q100 220 121 215" stroke="#c2410c" stroke-width="9"/>
+                            <rect x="96" y="204" width="8" height="8" rx="1" fill="#facc15" stroke="#7c2d12" stroke-width="1.5"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-avental">
+                            <path d="M83 125 L83 116 C83 100 117 100 117 116 L117 125" fill="none" stroke="#64748b" stroke-width="4" stroke-linecap="round"/>
+                            <path d="M82 120 Q100 127 118 120 L124 148 L132 236 Q100 247 68 236 L76 148 Z" fill="#cbd5e1" stroke="#475569" stroke-width="2.5" stroke-linejoin="round"/>
+                            <path d="M82 128 L91 131 L86 229 L73 233 L79 149 Z" fill="#f8fafc" fill-opacity="0.82"/>
+                            <path d="M118 128 L109 131 L114 229 L127 233 L121 149 Z" fill="#94a3b8" fill-opacity="0.65"/>
+                            <path d="M76 190 L66 194 L76 199 M124 190 L134 194 L124 199" fill="none" stroke="#64748b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M78 204 Q100 211 122 204 M70 236 Q100 243 130 236" fill="none" stroke="#64748b" stroke-width="2"/>
+                            <path d="M91 174 L109 174 M90 179 L110 179 M89 184 L111 184" stroke="#94a3b8" stroke-width="1.5"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-perneira" stroke="#7c2d12" stroke-width="2" stroke-linejoin="round">
+                            <path d="M64 276 L96 276 L94 347 L67 347 Z M104 276 L136 276 L133 347 L106 347 Z" fill="#b45309" fill-opacity="0.94"/>
+                            <path d="M67 286 L94 286 M106 286 L133 286 M67 337 L94 337 M106 337 L133 337" stroke="#fbbf24" stroke-width="3"/>
+                            <path d="M72 294 L91 294 M109 294 L128 294" stroke="#fed7aa" stroke-width="2"/>
+                        </g>
+
+                        <g class="equipped-epi" id="equipped-mascara-carnaval">
+                            <path d="M66 49 Q100 38 134 49 L126 68 Q113 65 100 73 Q87 65 74 68 Z M79 52 Q88 47 97 53 L96 61 Q88 65 81 60 Z M103 53 Q112 47 121 52 L119 60 Q112 65 104 61 Z" fill="#a855f7" fill-rule="evenodd" stroke="#581c87" stroke-width="2.5"/>
+                            <path d="M67 49 L58 42 M133 49 L142 42" stroke="#c084fc" stroke-width="3" stroke-linecap="round"/>
+                            <circle cx="75" cy="52" r="2" fill="#fef08a"/>
+                            <circle cx="125" cy="52" r="2" fill="#fef08a"/>
+                        </g>
+                    </svg>
+                </div>
+
+                <!-- Display do código -->
+                <div class="code-display">
+                    <h3>🔐 CÓDIGO SECRETO</h3>
+                    <div class="code-letters">
+                        <div class="code-letter empty" id="code-0">?</div>
+                        <div class="code-letter empty" id="code-1">?</div>
+                        <div class="code-letter empty" id="code-2">?</div>
+                        <div class="code-letter empty" id="code-3">?</div>
+                    </div>
+                </div>
+
+                <!-- Contador -->
+                <div class="selection-counter">
+                    EPIs Selecionados: <span id="counter">0</span> / <span id="requiredCounter">5</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Botões de Controle -->
+        <div class="controls">
+            <button class="btn btn-verify" onclick="verificarKit()">✅ VERIFICAR KIT</button>
+            <button class="btn btn-reset" onclick="resetGame()">🔄 RECOMEÇAR</button>
+        </div>
+    </div>
+
+    <!-- Modal de Resultado -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content" id="modalContent">
+            <div class="big-icon" id="modalIcon"></div>
+            <h2 id="modalTitle"></h2>
+            <p id="modalMessage"></p>
+            <div class="final-code" id="finalCode" aria-label="Código do cadeado"></div>
+            <p id="finalRiddle" hidden></p>
+            <div class="modal-actions">
+                <button class="btn btn-reset" onclick="closeModal()">FECHAR</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis do jogo
+        let selectedEpis = [];
+        const penalizedEpis = new Set();
+        let timerInterval = null;
+        let timeRemaining = 300; // 5 minutos em segundos
+        let gameStarted = false;
+
+        const riskProfile = {
+            correctEpis: ['protetor', 'oculos', 'luvas', 'botas', 'avental'],
+            code: '527',
+            codeMap: {
+                protetor: { letter: 'L', position: 0 },
+                oculos: { letter: 'A', position: 1 },
+                luvas: { letter: 'V', position: 2 },
+                avental: { letter: 'A', position: 3 }
+            }
+        };
+        const correctEpis = new Set(riskProfile.correctEpis);
+        const codeMap = riskProfile.codeMap;
+
+        // Função para iniciar o timer
+        function startTimer() {
+            if (gameStarted) return;
+            gameStarted = true;
+            document.getElementById('startBtn').style.display = 'none';
+            
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    showResult(false, "⏰ TEMPO ESGOTADO!", "O tempo acabou antes de você completar o kit de segurança!");
+                }
+            }, 1000);
+        }
+
+        // Atualizar display do timer
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const timerEl = document.getElementById('timer');
+            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            
+            // Mudar cor baseado no tempo
+            timerEl.classList.remove('warning', 'danger');
+            if (timeRemaining <= 60) {
+                timerEl.classList.add('danger');
+            } else if (timeRemaining <= 120) {
+                timerEl.classList.add('warning');
+            }
+        }
+
+        // Função para selecionar/desselecionar EPI
+        function toggleEpi(element) {
+            const epiName = element.dataset.epi;
+            const isCorrect = element.dataset.correct === 'true';
+            
+            if (element.classList.contains('selected')) {
+                // Desselecionar
+                element.classList.remove('selected');
+                selectedEpis = selectedEpis.filter(e => e !== epiName);
+                
+                // Remover do boneco
+                const equipped = isCorrect ? document.getElementById(`equipped-${epiName}`) : null;
+                if (equipped) {
+                    equipped.classList.remove('visible');
+                }
+                
+                // Remover letra do código
+                if (codeMap[epiName]) {
+                    const codeEl = document.getElementById(`code-${codeMap[epiName].position}`);
+                    codeEl.textContent = '?';
+                    codeEl.classList.add('empty');
+                }
+            } else {
+                // Selecionar
+                element.classList.add('selected');
+                selectedEpis.push(epiName);
+                
+                // Adicionar ao boneco
+                const equipped = isCorrect ? document.getElementById(`equipped-${epiName}`) : null;
+                if (equipped) {
+                    equipped.classList.add('visible');
+                }
+
+                if (!isCorrect && !penalizedEpis.has(epiName)) {
+                    penalizedEpis.add(epiName);
+                    timeRemaining = Math.max(0, timeRemaining - 30);
+                    updateTimerDisplay();
+
+                    if (timeRemaining === 0) {
+                        clearInterval(timerInterval);
+                        showResult(false, "⏰ TEMPO ESGOTADO!", "As penalidades por itens incorretos esgotaram o tempo.");
+                    }
+                }
+                
+                // Adicionar letra ao código
+                if (codeMap[epiName]) {
+                    const codeEl = document.getElementById(`code-${codeMap[epiName].position}`);
+                    codeEl.textContent = codeMap[epiName].letter;
+                    codeEl.classList.remove('empty');
+                }
+            }
+            
+            // Atualizar contador
+            document.getElementById('counter').textContent = selectedEpis.length;
+        }
+
+        // Verificar o kit selecionado
+        function verificarKit() {
+            const wrongSelected = selectedEpis.filter(epi => !correctEpis.has(epi));
+            const correctSelected = selectedEpis.filter(epi => correctEpis.has(epi));
+            
+            // Marcar itens errados
+            document.querySelectorAll('.epi-item').forEach(item => {
+                item.classList.remove('wrong');
+                if (item.classList.contains('selected') && item.dataset.correct === 'false') {
+                    item.classList.add('wrong');
+                }
+            });
+            
+            if (wrongSelected.length > 0) {
+                showResult(false, "❌ KIT INCORRETO!", 
+                    `Você selecionou ${wrongSelected.length} item(ns) errado(s)! EPIs inadequados não protegem o trabalhador. A penalidade de 30 segundos por item já foi aplicada na seleção. Tente novamente!`);
+            } else if (correctSelected.length < correctEpis.size) {
+                showResult(false, "⚠️ KIT INCOMPLETO!", 
+                    `Você selecionou apenas ${correctSelected.length} de ${correctEpis.size} EPIs necessários para este cenário. Complete o kit de proteção!`);
+            } else {
+                // Sucesso!
+                clearInterval(timerInterval);
+                showResult(true, "🎉 ACESSO LIBERADO!", 
+                    "Parabéns! O kit de proteção está correto! A trava eletrônica foi liberada. Use o código abaixo para abrir o próximo cadeado:");
+            }
+        }
+
+        // Mostrar resultado
+        function showResult(success, title, message) {
+            const modal = document.getElementById('resultModal');
+            const content = document.getElementById('modalContent');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const messageEl = document.getElementById('modalMessage');
+            const codeEl = document.getElementById('finalCode');
+            const riddleEl = document.getElementById('finalRiddle');
+            
+            content.classList.remove('success', 'failure');
+            content.classList.add(success ? 'success' : 'failure');
+            
+            icon.textContent = success ? '🏆' : '🚫';
+            titleEl.textContent = title;
+            messageEl.textContent = message;
+            codeEl.textContent = success ? riskProfile.code : '';
+            codeEl.style.display = success ? 'block' : 'none';
+            riddleEl.textContent = 'Sou a central que distribui a energia e protege cada circuito. Tenho disjuntores alinhados e fico fixo na parede. Que quadro você deve encontrar?';
+            riddleEl.hidden = !success;
+            modal.classList.add('show');
+        }
+
+        // Fechar modal
+        function closeModal() {
+            document.getElementById('resultModal').classList.remove('show');
+        }
+
+        // Resetar jogo
+        function resetGame() {
+            // Parar timer
+            clearInterval(timerInterval);
+            gameStarted = false;
+            timeRemaining = 300;
+            
+            // Resetar seleções
+            selectedEpis = [];
+            penalizedEpis.clear();
+            document.querySelectorAll('.epi-item').forEach(item => {
+                item.classList.remove('selected', 'wrong');
+            });
+            
+            // Resetar equipados
+            document.querySelectorAll('.equipped-epi').forEach(epi => {
+                epi.classList.remove('visible');
+            });
+            
+            // Resetar código
+            for (let i = 0; i < 4; i++) {
+                const codeEl = document.getElementById(`code-${i}`);
+                codeEl.textContent = '?';
+                codeEl.classList.add('empty');
+            }
+            
+            // Resetar contador e timer
+            document.getElementById('counter').textContent = '0';
+            document.getElementById('timer').textContent = '05:00';
+            document.getElementById('timer').classList.remove('warning', 'danger');
+            document.getElementById('startBtn').style.display = 'inline-block';
+            
+            // Fechar modal se aberto
+            closeModal();
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('resultModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
