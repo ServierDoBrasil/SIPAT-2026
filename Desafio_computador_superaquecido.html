@@ -241,6 +241,7 @@
                     <h2>Desafio concluído</h2>
                     <p>Código correto. Equipamento identificado!</p>
                     <p>Para equipamentos elétricos energizados, use um extintor indicado para incêndios de classe C. Seu agente extintor não conduz eletricidade, reduzindo o risco de choque. Extintores de CO₂ e de pó químico ABC são exemplos, desde que identificados para essa classe.</p>
+                    <p>Código para desbloquear o próximo desafio: <strong id="nextCode"></strong></p>
                 </div>
             </div>
         </main>
@@ -286,6 +287,7 @@
                 return;
             }
             document.getElementById('challengeContent').hidden = true;
+            document.getElementById('nextCode').textContent = CODIGO_EXTINTOR;
             document.getElementById('success').hidden = false;
             emergencyScreen.classList.add('resolved');
             document.getElementById('systemStatus').textContent = 'Temperatura controlada';

@@ -25,6 +25,54 @@
             padding: 20px;
         }
 
+        .entry-screen {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background: rgba(0,0,0,0.35);
+            border: 2px solid #00ff88;
+            border-radius: 15px;
+        }
+
+        .entry-screen h1 {
+            color: #00ff88;
+            margin-bottom: 12px;
+        }
+
+        .entry-screen > p {
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .entry-form label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .entry-form input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #607c72;
+            border-radius: 8px;
+            background: #101b20;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+
+        .entry-form input:focus-visible {
+            outline: 2px solid #00ff88;
+            outline-offset: 2px;
+        }
+
+        .entry-error {
+            min-height: 1.5em;
+            margin: 8px 0;
+            color: #ff8585;
+        }
+
+        .entry-form .btn { width: 100%; }
+
         #gameScreen[hidden] {
             display: none;
         }
@@ -502,7 +550,31 @@
     </style>
 </head>
 <body>
-    <div class="container" id="gameScreen">
+    <main class="container" id="entryScreen">
+        <div class="entry-screen">
+            <h1>COMECE AQUI</h1>
+            <p>Digite o código do desafio anterior para iniciar a manutenção da lavadora de bins.</p>
+            <div class="instructions">
+                <h3>📖 Como Jogar:</h3>
+                <ol>
+                    <li>Analise os riscos descritos na Ordem de Serviço.</li>
+                    <li>Selecione os <strong>5 itens corretos</strong> na lista misturada.</li>
+                    <li>Cada item incorreto selecionado recebe um X vermelho e uma penalidade de <strong>30 segundos</strong>.</li>
+                    <li>Observe o operador sendo equipado e clique em <strong>"VERIFICAR KIT"</strong>.</li>
+                    <li>Ao acertar, você receberá o <strong>CÓDIGO SECRETO</strong> para o próximo cadeado.</li>
+                </ol>
+                <p>O cronômetro de 5 minutos começa assim que você entrar no desafio.</p>
+            </div>
+            <form class="entry-form" id="entryForm" novalidate>
+                <label for="accessCode">Código do desafio anterior</label>
+                <input id="accessCode" type="text" autocomplete="off" placeholder="Digite o código" required>
+                <p class="entry-error" id="accessError" role="status" aria-live="polite"></p>
+                <button class="btn btn-start" type="submit">INICIAR DESAFIO</button>
+            </form>
+        </div>
+    </main>
+
+    <div class="container" id="gameScreen" hidden>
         <!-- Cabeçalho de Alerta -->
         <div class="alert-header">
             <h1>
@@ -515,7 +587,6 @@
         <!-- Timer -->
         <div class="timer-container">
             <div class="timer" id="timer">05:00</div>
-            <button class="btn btn-start" id="startBtn" onclick="startTimer()">▶ INICIAR CRONÔMETRO</button>
         </div>
 
         <!-- Ordem de Serviço -->
@@ -531,19 +602,6 @@
                     <span>🔊 Ruído no ciclo de lavagem</span>
                 </div>
             </div>
-        </div>
-
-        <!-- Instruções -->
-        <div class="instructions">
-            <h3>📖 Como Jogar:</h3>
-            <ol>
-                <li>Analise os riscos descritos na Ordem de Serviço</li>
-                <li>Selecione os <strong>5 itens corretos</strong> na lista misturada</li>
-                <li>Item errado selecionado: X vermelho e penalidade imediata de <strong>30 segundos</strong></li>
-                <li>Observe o operador sendo equipado</li>
-                <li>Clique em <strong>"VERIFICAR KIT"</strong> para validar suas escolhas</li>
-                <li>Se acertar, você receberá o <strong>CÓDIGO SECRETO</strong> para o próximo cadeado!</li>
-            </ol>
         </div>
 
         <!-- Área do Jogo -->
@@ -856,6 +914,7 @@
         let timerInterval = null;
         let timeRemaining = 300; // 5 minutos em segundos
         let gameStarted = false;
+        const CODIGO_ACESSO = '79742';
 
         const riskProfile = {
             correctEpis: ['protetor', 'oculos', 'luvas', 'botas', 'avental'],
@@ -870,11 +929,30 @@
         const correctEpis = new Set(riskProfile.correctEpis);
         const codeMap = riskProfile.codeMap;
 
+        document.getElementById('entryForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const input = document.getElementById('accessCode');
+            const error = document.getElementById('accessError');
+            if (input.value.trim().toLowerCase() !== CODIGO_ACESSO.toLowerCase()) {
+                error.textContent = input.value.trim() ? 'Código incorreto. Confira a pista do desafio anterior.' : 'Informe o código do desafio anterior.';
+                input.setAttribute('aria-invalid', 'true');
+                input.focus();
+                return;
+            }
+            document.getElementById('entryScreen').hidden = true;
+            document.getElementById('gameScreen').hidden = false;
+            startTimer();
+        });
+
+        document.getElementById('accessCode').addEventListener('input', function() {
+            document.getElementById('accessError').textContent = '';
+            this.removeAttribute('aria-invalid');
+        });
+
         // Função para iniciar o timer
         function startTimer() {
             if (gameStarted) return;
             gameStarted = true;
-            document.getElementById('startBtn').style.display = 'none';
             
             timerInterval = setInterval(() => {
                 timeRemaining--;
@@ -1044,10 +1122,10 @@
             document.getElementById('counter').textContent = '0';
             document.getElementById('timer').textContent = '05:00';
             document.getElementById('timer').classList.remove('warning', 'danger');
-            document.getElementById('startBtn').style.display = 'inline-block';
             
             // Fechar modal se aberto
             closeModal();
+            startTimer();
         }
 
         // Fechar modal ao clicar fora
