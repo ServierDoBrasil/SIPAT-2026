@@ -115,36 +115,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Timer */
-        .timer-container {
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .timer {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #00ff88;
-            text-shadow: 0 0 20px #00ff88;
-            font-family: 'Courier New', monospace;
-        }
-
-        .timer.warning {
-            color: #ffaa00;
-            text-shadow: 0 0 20px #ffaa00;
-        }
-
-        .timer.danger {
-            color: #ff4444;
-            text-shadow: 0 0 20px #ff4444;
-            animation: blink 0.5s infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
         /* Ordem de Serviço */
         .ordem-servico {
             background: #f5f5dc;
@@ -487,15 +457,6 @@
             line-height: 1.6;
         }
 
-        .final-code {
-            font-size: 3rem;
-            font-weight: bold;
-            color: gold;
-            text-shadow: 0 0 20px gold;
-            letter-spacing: 15px;
-            margin: 20px 0;
-        }
-
         /* Contador de seleções */
         .selection-counter {
             background: rgba(0,0,0,0.5);
@@ -559,11 +520,10 @@
                 <ol>
                     <li>Analise os riscos descritos na Ordem de Serviço.</li>
                     <li>Selecione os <strong>5 itens corretos</strong> na lista misturada.</li>
-                    <li>Cada item incorreto selecionado recebe um X vermelho e uma penalidade de <strong>30 segundos</strong>.</li>
+                    <li>Cada item incorreto selecionado recebe um X vermelho.</li>
                     <li>Observe o operador sendo equipado e clique em <strong>"VERIFICAR KIT"</strong>.</li>
-                    <li>Ao acertar, você receberá o <strong>CÓDIGO SECRETO</strong> para o próximo cadeado.</li>
+                    <li>Ao acertar, você concluirá o desafio.</li>
                 </ol>
-                <p>O cronômetro de 5 minutos começa assim que você entrar no desafio.</p>
             </div>
             <form class="entry-form" id="entryForm" novalidate>
                 <label for="accessCode">Código do desafio anterior</label>
@@ -582,11 +542,6 @@
                 <span>ALERTA! Manutenção da Lavadora de Bins</span>
                 <span class="siren">🚨</span>
             </h1>
-        </div>
-
-        <!-- Timer -->
-        <div class="timer-container">
-            <div class="timer" id="timer">05:00</div>
         </div>
 
         <!-- Ordem de Serviço -->
@@ -899,7 +854,6 @@
             <div class="big-icon" id="modalIcon"></div>
             <h2 id="modalTitle"></h2>
             <p id="modalMessage"></p>
-            <div class="final-code" id="finalCode" aria-label="Código do cadeado"></div>
             <p id="finalRiddle" hidden></p>
             <div class="modal-actions">
                 <button class="btn btn-reset" onclick="closeModal()">FECHAR</button>
@@ -910,15 +864,10 @@
     <script>
         // Variáveis do jogo
         let selectedEpis = [];
-        const penalizedEpis = new Set();
-        let timerInterval = null;
-        let timeRemaining = 300; // 5 minutos em segundos
-        let gameStarted = false;
         const CODIGO_ACESSO = '79742';
 
         const riskProfile = {
             correctEpis: ['protetor', 'oculos', 'luvas', 'botas', 'avental'],
-            code: '527',
             codeMap: {
                 protetor: { letter: 'L', position: 0 },
                 oculos: { letter: 'A', position: 1 },
@@ -941,45 +890,12 @@
             }
             document.getElementById('entryScreen').hidden = true;
             document.getElementById('gameScreen').hidden = false;
-            startTimer();
         });
 
         document.getElementById('accessCode').addEventListener('input', function() {
             document.getElementById('accessError').textContent = '';
             this.removeAttribute('aria-invalid');
         });
-
-        // Função para iniciar o timer
-        function startTimer() {
-            if (gameStarted) return;
-            gameStarted = true;
-            
-            timerInterval = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
-                
-                if (timeRemaining <= 0) {
-                    clearInterval(timerInterval);
-                    showResult(false, "⏰ TEMPO ESGOTADO!", "O tempo acabou antes de você completar o kit de segurança!");
-                }
-            }, 1000);
-        }
-
-        // Atualizar display do timer
-        function updateTimerDisplay() {
-            const minutes = Math.floor(timeRemaining / 60);
-            const seconds = timeRemaining % 60;
-            const timerEl = document.getElementById('timer');
-            timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            
-            // Mudar cor baseado no tempo
-            timerEl.classList.remove('warning', 'danger');
-            if (timeRemaining <= 60) {
-                timerEl.classList.add('danger');
-            } else if (timeRemaining <= 120) {
-                timerEl.classList.add('warning');
-            }
-        }
 
         // Função para selecionar/desselecionar EPI
         function toggleEpi(element) {
@@ -1014,17 +930,6 @@
                     equipped.classList.add('visible');
                 }
 
-                if (!isCorrect && !penalizedEpis.has(epiName)) {
-                    penalizedEpis.add(epiName);
-                    timeRemaining = Math.max(0, timeRemaining - 30);
-                    updateTimerDisplay();
-
-                    if (timeRemaining === 0) {
-                        clearInterval(timerInterval);
-                        showResult(false, "⏰ TEMPO ESGOTADO!", "As penalidades por itens incorretos esgotaram o tempo.");
-                    }
-                }
-                
                 // Adicionar letra ao código
                 if (codeMap[epiName]) {
                     const codeEl = document.getElementById(`code-${codeMap[epiName].position}`);
@@ -1052,15 +957,14 @@
             
             if (wrongSelected.length > 0) {
                 showResult(false, "❌ KIT INCORRETO!", 
-                    `Você selecionou ${wrongSelected.length} item(ns) errado(s)! EPIs inadequados não protegem o trabalhador. A penalidade de 30 segundos por item já foi aplicada na seleção. Tente novamente!`);
+                    `Você selecionou ${wrongSelected.length} item(ns) errado(s)! EPIs inadequados não protegem o trabalhador. Ajuste a seleção e tente novamente!`);
             } else if (correctSelected.length < correctEpis.size) {
                 showResult(false, "⚠️ KIT INCOMPLETO!", 
                     `Você selecionou apenas ${correctSelected.length} de ${correctEpis.size} EPIs necessários para este cenário. Complete o kit de proteção!`);
             } else {
                 // Sucesso!
-                clearInterval(timerInterval);
                 showResult(true, "🎉 ACESSO LIBERADO!", 
-                    "Parabéns! O kit de proteção está correto! A trava eletrônica foi liberada. Use o código abaixo para abrir o próximo cadeado:");
+                    "Parabéns! O kit de proteção está correto! A trava eletrônica foi liberada.");
             }
         }
 
@@ -1071,7 +975,6 @@
             const icon = document.getElementById('modalIcon');
             const titleEl = document.getElementById('modalTitle');
             const messageEl = document.getElementById('modalMessage');
-            const codeEl = document.getElementById('finalCode');
             const riddleEl = document.getElementById('finalRiddle');
             
             content.classList.remove('success', 'failure');
@@ -1080,9 +983,7 @@
             icon.textContent = success ? '🏆' : '🚫';
             titleEl.textContent = title;
             messageEl.textContent = message;
-            codeEl.textContent = success ? riskProfile.code : '';
-            codeEl.style.display = success ? 'block' : 'none';
-            riddleEl.textContent = 'Sou a central que distribui a energia e protege cada circuito. Tenho disjuntores alinhados e fico fixo na parede. Que quadro você deve encontrar?';
+            riddleEl.textContent = 'Sou a central que distribui a energia e protege cada circuito. Tenho disjuntores alinhados e fico fixo na parede. Lembre-se utilize o equipamento necessário!';
             riddleEl.hidden = !success;
             modal.classList.add('show');
         }
@@ -1094,14 +995,8 @@
 
         // Resetar jogo
         function resetGame() {
-            // Parar timer
-            clearInterval(timerInterval);
-            gameStarted = false;
-            timeRemaining = 300;
-            
             // Resetar seleções
             selectedEpis = [];
-            penalizedEpis.clear();
             document.querySelectorAll('.epi-item').forEach(item => {
                 item.classList.remove('selected', 'wrong');
             });
@@ -1118,14 +1013,11 @@
                 codeEl.classList.add('empty');
             }
             
-            // Resetar contador e timer
+            // Resetar contador
             document.getElementById('counter').textContent = '0';
-            document.getElementById('timer').textContent = '05:00';
-            document.getElementById('timer').classList.remove('warning', 'danger');
             
             // Fechar modal se aberto
             closeModal();
-            startTimer();
         }
 
         // Fechar modal ao clicar fora
